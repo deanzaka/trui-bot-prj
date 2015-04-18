@@ -9,17 +9,29 @@
 #include <std_msgs/Int16.h>
 #include <std_msgs/Int16MultiArray.h>
 
+#include <inttypes.h>
+
 
 ros::Publisher move_pub;
 geometry_msgs::Twist move;
 
-
-float v_x,v_y, v_z;
+uint64_t time_last = 0;
 float x_last = 0;
 float y_last = 0;
 float z_last = 0;
-uint64_t time_last = 0;
+
+uint64_t time_temp = 0;
+float x_temp = 0;
+float y_temp = 0;
+float z_temp = 0;
+ 	
+uint64_t time_out = 0;
+float x_out = 0;
+float y_out = 0;
+float z_out = 0;
+
 float x_eta,y_eta,eta;
+float v_x,v_y, v_z;
 int buttonL1,buttonR1;
 int count = 0;
 
@@ -36,16 +48,16 @@ semiauto (const geometry_msgs::PoseStamped& sPose)
 {
 	count++;
 	
-  uint64_t time_temp = sPose.header.stamp.toNSec();
-	float x_temp = -(sPose.pose.position.y);
-  float y_temp = sPose.pose.position.x;
-  float z_temp = sPose.pose.position.z;
+  time_temp = sPose.header.stamp.toNSec();
+	x_temp = -(sPose.pose.position.y);
+  y_temp = sPose.pose.position.x;
+  z_temp = sPose.pose.position.z;
  	
- 	uint64_t time_out = time_temp - time_last;
-  float x_out = x_temp - x_last;
-  float y_out = y_temp - y_last;
-  float z_out = z_temp - z_last;
-  ROS_INFO("time_last = %d, time_temp = %d, time_out = %f", time_last, time_temp, time_out);
+ 	time_out = time_temp - time_last;
+  x_out = x_temp - x_last;
+  y_out = y_temp - y_last;
+  z_out = z_temp - z_last;
+  ROS_INFO("time_last = %" PRIu64 ", time_temp = %" PRIu64 ", time_out = %" PRIu64 "", time_last, time_temp, time_out);
   
   time_last = time_temp;
   x_last = x_temp;
