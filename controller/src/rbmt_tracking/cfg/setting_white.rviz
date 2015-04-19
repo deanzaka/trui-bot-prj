@@ -122,14 +122,14 @@ Visualization Manager:
       Marker Topic: /visualization_marker
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.10152
-        Min Value: 2.01172
+        Max Value: 3.24724
+        Min Value: 0.537616
         Value: true
       Axis: X
       Channel Name: intensity
@@ -211,5 +211,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1301
-  X: 55
+  X: 35
   Y: 14
