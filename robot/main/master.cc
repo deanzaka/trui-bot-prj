@@ -28,11 +28,17 @@
 
 #define initialSpeed 0
 
+<<<<<<< Updated upstream
 #define DONE 1
 
 ros::NodeHandle nh;
 geometry_msgs::Twist twist_msg;
 
+=======
+ros::NodeHandle nh;
+geometry_msgs::Twist twist_msg;
+
+>>>>>>> Stashed changes
 ros::Publisher chatter("embedded_chat", &twist_msg);
 
 
@@ -68,6 +74,7 @@ speedW_fromTwist = rbmt_vel.angular.z;
 
 if(rbmt_vel.angular.x == 1) digitalWrite(hitPin,HIGH); else digitalWrite(hitPin,LOW);
 
+<<<<<<< Updated upstream
 // speedX = -trans_speedXFactor*speedX;
 // speedY = trans_speedYFactor*speedY;
 
@@ -146,11 +153,39 @@ else if(speedY_fromTwist < 0){ //Counter clockwise direction
   }
   else speedY = speedY_fromTwist;
 }
+=======
+void assignSpeed( const geometry_msgs::Twist& rbmt_vel){
+float v1,v2,v3;
+
+//      Vy
+//      ^
+//      |
+//      |
+//      |-------> Vx
+
+// sqrt(3.0)/2.0, -1.0/2.0, -1.0,
+//   0.0        ,  1.0    , -1.0
+//-sqrt(3.0)/2.0, -1.0/2.0, -1.0;
+
+speedX = rbmt_vel.linear.x;
+speedY = rbmt_vel.linear.y;
+speedW = rbmt_vel.angular.z;
+serveCommand = (int)rbmt_vel.angular.y;
+//if(rbmt_vel.angular.x == 1) serveCommand = digitalWrite(hitPin,HIGH); else digitalWrite(hitPin,LOW);
+
+speedX = -trans_speedXFactor*speedX;
+speedY = trans_speedYFactor*speedY;
+
+v1 = (-sqrt(3.0)/2.0)*speedY + speedX/2 + rot_speedFactor*L*speedW;
+v2 = -speedX + rot_speedFactor*L*speedW; 
+v3 = (sqrt(3.0)/2.0)*speedY + speedX/2  + rot_speedFactor*L*speedW;
+>>>>>>> Stashed changes
 
 else {
   speedY = 0;
 }
 
+<<<<<<< Updated upstream
 // if( speedX < speedX_fromTwist){ //acceleration
 //   if(do_accelerationX == 1){
 //     do_accelerationX = 0;
@@ -201,6 +236,13 @@ ISR(TIMER1_COMPA_vect){
   //PID for orientation control
 }
 
+=======
+sendspeed1 = v1/R*9.55; //Covert rad/s to RPM 
+sendspeed2 = v2/R*9.55; //Covert rad/s to RPM
+sendspeed3 = v3/R*9.55; //Covert rad/s to RPM 
+}
+
+>>>>>>> Stashed changes
 ros::Subscriber<geometry_msgs::Twist> sub("read_velocity", &assignSpeed );
 
 void toggleReset(){
@@ -263,8 +305,13 @@ int main() {
   int fromSerial_3[2];
 
   init(); //Mandatory arduino setups, hardware registers etc
+<<<<<<< Updated upstream
   intteruptSetup();
   nh.initNode();
+=======
+  Wire.begin(); //Start wire Comm
+  nh.initNode(); //Init board as a ROS Node
+>>>>>>> Stashed changes
   nh.advertise(chatter);
   nh.subscribe(sub);
 
@@ -304,6 +351,7 @@ int main() {
     }
   // } 
 
+<<<<<<< Updated upstream
     // if(Serial1.available()){//&& Serial1.read() == 0xCE){
     //   fromSerial_1[0] = Serial1.read();
     //   // fromSerial_1[1] = Serial1.read();
@@ -327,6 +375,29 @@ int main() {
     twist_msg.angular.x = speedY; //sendspeed1;
     twist_msg.angular.y = speedX;//sendspeed2;
     twist_msg.angular.z = 0;//do_acceleration;//sendspeed3;
+=======
+    if(Serial1.available()){//&& Serial1.read() == 0xCE){
+      fromSerial_1[0] = Serial1.read();
+      // fromSerial_1[1] = Serial1.read();
+      twist_msg.linear.x = (fromSerial_1[0]);// | (fromSerial_1[1]<<8));
+    }
+
+    if(Serial2.available()){// && Serial2.read() == 0xCE){
+      fromSerial_2[0] = Serial2.read();
+      // fromSerial_2[1] = Serial2.read();
+      twist_msg.linear.y = (fromSerial_2[0]);// | (fromSerial_2[1]<<8));
+    }
+
+    if(Serial3.available()){// && Serial3.read() == 0xCE){
+      fromSerial_3[0] = Serial3.read();
+      // fromSerial_3[1] = Serial3.read();
+      twist_msg.linear.z = (fromSerial_3[0]);// | (fromSerial_3[1]<<8));
+    }
+
+    twist_msg.angular.x = sendspeed1;
+    twist_msg.angular.y = sendspeed2;
+    twist_msg.angular.z = sendspeed3;
+>>>>>>> Stashed changes
 
     chatter.publish( &twist_msg );
     
@@ -370,8 +441,21 @@ int main() {
     Serial1.write(buffer1, 7);
     Serial2.write(buffer2, 7);
     Serial3.write(buffer3, 7);
+<<<<<<< Updated upstream
     // delay(1);
   nh.spinOnce();
+=======
+
+    wireServe(serveCommand);
+
+    delay(1);
+  nh.spinOnce();
+  
+
+
+
+
+>>>>>>> Stashed changes
   
   }
   return 0;
