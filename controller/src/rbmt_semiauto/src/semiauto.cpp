@@ -3,7 +3,7 @@
 
 // ROS includes
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Twist.h>
 
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int16.h>
@@ -13,7 +13,7 @@
 
 
 ros::Publisher move_pub;
-geometry_msgs::TwistStamped move;
+geometry_msgs::Twist move;
 
 uint64_t time_last = 0;
 float x_last = 0;
@@ -42,22 +42,21 @@ trigger (const std_msgs::Int16MultiArray::ConstPtr& msg)
   buttonL1       = msg->data[12];
 	buttonR1       = msg->data[14];
 
-  move.twist.angular.x = buttonR1;
+  move.angular.x = buttonR1;
   if (buttonL1 == 1) {     
-    move.twist.linear.x = x_eta / eta;
-    move.twist.linear.y = y_eta / eta;
+    move.linear.x = x_eta / eta;
+    move.linear.y = y_eta / eta;
   }
 
   else {
-    move.twist.linear.x = 0;
-    move.twist.linear.y = 0;
+    move.linear.x = 0;
+    move.linear.y = 0;
     x_eta = 0;
     y_eta = 0;
     x_temp = 0;
     y_temp = 0;
     count = 0; 
   }
-  move.header.stamp = ros::Time::now();
   move_pub.publish(move);
 }
 
@@ -93,19 +92,6 @@ semiauto (const geometry_msgs::PoseStamped& sPose)
   	y_eta = y_temp + (v_y * eta);
     ROS_INFO("x_eta : %f, y_eta : %f, ", x_eta, y_eta);
   }
-  // testing without joystick
-
-  else {
-    x_eta = 0;
-    y_eta = 0; 
-  }
-
-  move.twist.linear.x = x_eta / eta;
-  move.twist.linear.y = y_eta / eta;
-
-  
-  move.header.stamp = ros::Time::now();
-  move_pub.publish(move);
 }
 
 int
@@ -117,7 +103,7 @@ main (int argc, char** argv)
 
   // Create a ROS subscriber for raw cock '-> this really gives some negative inuendo' pose
   ros::Subscriber joy_sub = nh.subscribe ("read_joy",1, trigger);
-  move_pub = nh.advertise<geometry_msgs::TwistStamped>("read_velocity", 100);
+  move_pub = nh.advertise<geometry_msgs::Twist>("read_velocity", 100);
   ros::Subscriber sub = nh.subscribe ("transformed_pose", 1, semiauto);	
 
   ros::spin();
