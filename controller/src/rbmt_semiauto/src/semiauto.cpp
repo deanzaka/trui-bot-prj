@@ -3,7 +3,7 @@
 
 // ROS includes
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int16.h>
@@ -13,7 +13,7 @@
 
 
 ros::Publisher move_pub;
-geometry_msgs::Twist move;
+geometry_msgs::TwistStamped move;
 
 uint64_t time_last = 0;
 float x_last = 0;
@@ -41,6 +41,24 @@ trigger (const std_msgs::Int16MultiArray::ConstPtr& msg)
 {
   buttonL1       = msg->data[12];
 	buttonR1       = msg->data[14];
+
+  move.twist.angular.x = buttonR1;
+  if (buttonL1 == 1) {     
+    move.twist.linear.x = x_eta / eta;
+    move.twist.linear.y = y_eta / eta;
+  }
+
+  else {
+    move.twist.linear.x = 0;
+    move.twist.linear.y = 0;
+    x_eta = 0;
+    y_eta = 0;
+    x_temp = 0;
+    y_temp = 0;
+    count = 0; 
+  }
+  move.header.stamp = ros::Time::now();
+  move_pub.publish(move);
 }
 
 void 
@@ -71,43 +89,23 @@ semiauto (const geometry_msgs::PoseStamped& sPose)
   ROS_INFO("Vx : %f, Vy : %f, Vz : %f, ", v_x, v_y, v_z);
 	
   if(count == 2){
-  x_eta = x_temp + (v_x * eta);
-	y_eta = y_temp + (v_y * eta);
-  ROS_INFO("x_eta : %f, y_eta : %f, ", x_eta, y_eta);
+    x_eta = x_temp + (v_x * eta);
+  	y_eta = y_temp + (v_y * eta);
+    ROS_INFO("x_eta : %f, y_eta : %f, ", x_eta, y_eta);
+  }
+  // testing without joystick
+
+  else {
+    x_eta = 0;
+    y_eta = 0; 
   }
 
-}
+  move.twist.linear.x = x_eta / eta;
+  move.twist.linear.y = y_eta / eta;
 
-void run(ros::Rate rate){
-
-    while(ros::ok()) {
-   
-      move.angular.x = buttonR1;
-      // ROS_INFO("hit is %f", move.angular.x);
-      // if (count >= 2) {
-    if (buttonL1 == 1) {     
-        move.linear.x = x_eta / eta;
-        move.linear.y = y_eta / eta;
-      }
-  //  }
-    
-    else {
-    //  count = 0;
-    // // move.angular.x = buttonR1;
-      move.linear.x = 0;
-      move.linear.y = 0;
-      x_eta = 0;
-      y_eta = 0;
-      x_temp = 0;
-      y_temp = 0; 
-    }
-      // move.linear.y = v_y;
-      move_pub.publish(move);
   
-    //}// Spin
-    ros::spinOnce();
-    rate.sleep();
-  }
+  move.header.stamp = ros::Time::now();
+  move_pub.publish(move);
 }
 
 int
@@ -119,8 +117,8 @@ main (int argc, char** argv)
 
   // Create a ROS subscriber for raw cock '-> this really gives some negative inuendo' pose
   ros::Subscriber joy_sub = nh.subscribe ("read_joy",1, trigger);
-  move_pub = nh.advertise<geometry_msgs::Twist>("read_velocity", 100);
+  move_pub = nh.advertise<geometry_msgs::TwistStamped>("read_velocity", 100);
   ros::Subscriber sub = nh.subscribe ("transformed_pose", 1, semiauto);	
-  	
-  run(ros::Rate(100));
+
+  ros::spin();
 }
